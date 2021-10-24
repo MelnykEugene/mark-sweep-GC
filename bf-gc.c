@@ -292,6 +292,14 @@ void mark () {
 } // mark ()
 // ==============================================================================
 
+void* current_header = allocated_list_head;
+while(current!=NULL){
+  header_s* next_header = current->next;
+  void* block_ptr = HEADER_TO_BLOCK(current_header);
+  header_ptr->marked = true;
+  size_t* offsets = header_ptr->layout->ptr_offsets;
+  
+ }
 
 
 // ==============================================================================
@@ -310,7 +318,18 @@ void sweep () {
 
 } // sweep ()
 // ==============================================================================
-
+header_s* current_header = allocated_list_head;
+while (current_header!=NULL){
+  header_s* next_header = current_header->next;
+  void* current_block = HEADER_TO_BLOCK(current_header);
+  if (current_header->marked==true){
+    current_header->marked=false;
+  }
+  else{
+    gc_free(current_block);
+  }
+  current_header=next_header;
+ }
 
 
 // ==============================================================================

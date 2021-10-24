@@ -234,26 +234,26 @@ void* gc_malloc (size_t size) {
     return NULL;
   }
 
-  int align = (sizeof(header_s) + 16 - (free_addr % 16)) %16; //maybe
-
   header_s* current_header = free_list_head;
   header_s* best = NULL;
 
   //search for best fit
   while(current_header!=NULL){
-    if (current->allocated) {
-      ERROR("Allocated block on free list", (intptr_t)current); //if this triggers then the free list wasn't appropriately constructed
+    if (current_header->allocated) {
+      ERROR("Allocated block on free list", (intptr_t)current_header); //if this triggers then the free list wasn't appropriately constructed
     }
-    if ( (best == NULL && size <= current->size) ||
-	 (best != NULL && size <= current->size && current->size < best->size) ) { 
-      best = current;
+    if ( (best == NULL && size <= current_header->size) ||
+	 (best != NULL && size <= current_header->size && current_header->size < best->size) ) { 
+      best = current_header;
     }
     if (best != NULL && best->size == size) {
       break; //if we found an exact match size-wise, there is no need to traverse further
     }
-    current = current->next; //onto the next link 
+    current_header = current_header->next; //onto the next link 
   }
 
+  void* new_block_ptr = NULL;
+  
   if (best!=NULL){
     //cut out of free list
     if(best->prev ==NULL){ 
@@ -389,18 +389,18 @@ void* gc_new (gc_layout_s* layout) {
  */
 
 void mark () {
- while(!root_set_head==NULL){
+ while(root_set_head!=NULL){
   void* current_block = rs_pop();
 
   if (current_block !=NULL){ //this check might be excessive, idc
     header_s* current_header = BLOCK_TO_HEADER(current_block);
 
-    header->marked = true;
+    current_header->marked = true;
 
     gc_layout_s* current_layout = current_header->layout;
     size_t* offsets = current_layout->ptr_offsets;
-    for (int i =0; i< current_layout->num_ptrs; i++){
--      void** handle = current_block + offsets[i];
+    for (int i = 0; i< current_layout->num_ptrs; i++){
+      void** handle = current_block + offsets[i];
       rs_push(*handle);
     }
   }

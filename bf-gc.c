@@ -242,7 +242,10 @@ void* gc_malloc (size_t size) {
 //   unchanged.
 void gc_free (void* ptr) {
 
-  
+  if (ptr == NULL) {
+    return;
+  }
+
   
 } // gc_free ()
 // ==============================================================================
@@ -281,18 +284,7 @@ void* gc_new (gc_layout_s* layout) {
  */
 
 void mark () {
-
-  // WRITE ME.
-  //
-  //   Adapt the pseudocode from class for a copying collector to real code here
-  //   for a non-copying collector.  Do the traversal, using the linked stack of
-  //   pointers that starts at `root_set_head`, setting the `marked` field on
-  //   each object you reach.
-  
-} // mark ()
-// ==============================================================================
-
-while(!root_set_head==NULL){
+ while(!root_set_head==NULL){
   void* current_block = rs_pop();
 
   if (current_block !=NULL){ //this check might be excessive, idc
@@ -303,11 +295,14 @@ while(!root_set_head==NULL){
     gc_layout_s* current_layout = current_header->layout;
     size_t* offsets = current_layout->ptr_offsets;
     for (int i =0; i< current_layout->num_ptrs; i++){
-      void** handle = current_block + offsets[i];
+-      void** handle = current_block + offsets[i];
       rs_push(*handle);
     }
   }
  }
+} // mark ()
+// ==============================================================================
+
 
 
 // ==============================================================================
@@ -318,14 +313,6 @@ while(!root_set_head==NULL){
 
 void sweep () {
 
-  // WRITE ME
-  //
-  //   Walk the allocated list.  Each object that is marked is alive, so clear
-  //   its mark.  Each object that is unmarked is dead, so free it with
-  //   `gc_free()`.
-
-} // sweep ()
-// ==============================================================================
 header_s* current_header = allocated_list_head;
 while (current_header!=NULL){
   header_s* next_header = current_header->next;
@@ -338,6 +325,9 @@ while (current_header!=NULL){
   }
   current_header=next_header;
  }
+
+} // sweep ()
+// ==============================================================================
 
 
 // ==============================================================================

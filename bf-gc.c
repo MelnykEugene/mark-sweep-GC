@@ -246,6 +246,33 @@ void gc_free (void* ptr) {
     return;
   }
 
+  header_s* header_ptr = BLOCK_TO_HEADER(ptr);
+
+  if (!header_ptr->allocated) {
+    ERROR("Double-free: ", (intptr_t)header_ptr);  //if the given block wasn't marked as allocated, this means we are trying to free an unallocated block.
+  }
+
+  if(header_ptr->prev==NULL){
+    allocated_list_head=header_ptr->next;
+  } else{
+    header_ptr->prev->next = header_ptr->next;
+  }
+
+  if(header_ptr->next!=NULL){
+    header_ptr->next->prev = header_ptr->prev;
+  }
+
+  header_ptr->next=NULL; //probably unnecessary?
+  header_ptr->prev=NULL;
+
+  header_ptr->next = free_list_head;
+  free_list_head = header_ptr;
+
+  if(header_ptr->next!=NULL){
+    header_ptr->next->prev=header_ptr;
+    }
+
+  header_ptr->allocated = false;
   
 } // gc_free ()
 // ==============================================================================

@@ -292,13 +292,21 @@ void mark () {
 } // mark ()
 // ==============================================================================
 
-void* current_header = allocated_list_head;
-while(current!=NULL){
-  header_s* next_header = current->next;
-  void* block_ptr = HEADER_TO_BLOCK(current_header);
-  header_ptr->marked = true;
-  size_t* offsets = header_ptr->layout->ptr_offsets;
-  
+while(!root_set_head==NULL){
+  void* current_block = rs_pop();
+
+  if (current_block !=NULL){ //this check might be excessive, idc
+    header_s* current_header = BLOCK_TO_HEADER(current_block);
+
+    header->marked = true;
+
+    gc_layout_s* current_layout = current_header->layout;
+    size_t* offsets = current_layout->ptr_offsets;
+    for (int i =0; i< current_layout->num_ptrs; i++){
+      void** handle = current_block + offsets[i];
+      rs_push(*handle);
+    }
+  }
  }
 
 

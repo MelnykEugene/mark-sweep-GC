@@ -228,7 +228,7 @@ void gc_init () {
 //   from the Project-4 one; my `allocated_list_head` may be a slightly
 //   different name than the one you used.  Check the details.
 void* gc_malloc (size_t size) {
-
+  gc_init();
 
   if (size == 0) { //only allocate if requested non-zero size
     return NULL;

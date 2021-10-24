@@ -230,6 +230,84 @@ void gc_init () {
 void* gc_malloc (size_t size) {
 
 
+  if (size == 0) { //only allocate if requested non-zero size
+    return NULL;
+  }
+
+  int align = (sizeof(header_s) + 16 - (free_addr % 16)) %16; //maybe
+
+  header_s* current_header = free_list_head;
+  header_s* best = NULL;
+
+  //search for best fit
+  while(current_header!=NULL){
+    if (current->allocated) {
+      ERROR("Allocated block on free list", (intptr_t)current); //if this triggers then the free list wasn't appropriately constructed
+    }
+    if ( (best == NULL && size <= current->size) ||
+	 (best != NULL && size <= current->size && current->size < best->size) ) { 
+      best = current;
+    }
+    if (best != NULL && best->size == size) {
+      break; //if we found an exact match size-wise, there is no need to traverse further
+    }
+    current = current->next; //onto the next link 
+  }
+
+  if (best!=NULL){
+    //cut out of free list
+    if(best->prev ==NULL){ 
+      free_list_head = best->next;
+    }
+    else{
+      best->prev->next = best->next;
+    }
+
+    if(best->next!=NULL){
+      best->next->prev =best->prev;
+    }
+
+    best->prev = NULL;
+    best->next = NULL;
+    best->allocated =true;
+    new_block_ptr = BLOCK_TO_HEADER(best);
+  } else{
+    header_s* header_ptr = (header_s*)free_addr;
+    new_block_ptr = HEADER_TO_BLOCK(header_ptr);
+
+    int align =(16 - (intptr_t)new_block_ptr %16)%16;  //alignment offset
+    header_ptr = (header_s*)(header_ptr+align); 
+    new_block_ptr=(void*)(new_block_ptr+align);
+    
+    header_ptr->next      = allocated_list_head;
+    header_ptr->prev      = NULL;
+    header_ptr->size      = size;
+    header_ptr->allocated = true;
+
+    intptr_t new_free_addr = (intptr_t)new_block_ptr + size;
+    if (new_free_addr > end_addr) {
+
+      return NULL; //if the resulting free address exceeds expected bounds then we didn't have enough space for allocation and we return an error.
+
+    } else {
+
+      free_addr = new_free_addr; 
+
+    }
+  }
+
+  //add to the allocated list
+  header_s* allocated_block_header=BLOCK_TO_HEADER(new_block_ptr);
+  allocated_block_header->next = allocated_list_head;
+  allocated_list_head = allocated_block_header;
+  allocated_block_header->prev=NULL;
+
+  if(allocated_block_header->next!=NULL){
+    allocated_block_header->next->prev=allocated_block_header;
+  }
+
+  return new_block_ptr;
+
 } // gc_malloc ()
 // ==============================================================================
 

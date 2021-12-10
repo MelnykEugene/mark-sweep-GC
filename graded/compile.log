@@ -1,0 +1,5 @@
+rm -rf *.o gctest
+gcc -std=gnu99 -ggdb -Wall -c bf-gc.c
+gcc -std=gnu99 -ggdb -Wall -c safeio.c
+gcc -std=gnu99 -ggdb -Wall -o gctest gctest.c bf-gc.o safeio.o
+gcc -std=gnu99 -ggdb -Wall -o gctest2 gctest2.c bf-gc.o safeio.o
